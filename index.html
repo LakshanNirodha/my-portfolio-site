@@ -1,0 +1,544 @@
+<title>Lakshan Nirodha</title>
+<style>
+/* Layout concept: dark SOC console - animated grid + scanline backdrop, a typed terminal hero,
+   a skills "diagnostics" readout with proficiency bars, an ATT&CK-tagged incident case file,
+   and experience compressed into a system log instead of a resume timeline. Dark theme only, by request. */
+:root{
+  --bg:#070b14; --bg-grid:#0c1322; --surface:#0e1524; --surface-2:#121b30; --line:#1e2c48;
+  --fg:#e9eefb; --muted:#7e91b8; --accent:#4beed1; --accent-2:#59a6ff; --accent-dim:#123934;
+  --warn:#f2b35a; --crit:#ff5d75;
+  --display:'Sora',system-ui,sans-serif;
+  --body:'IBM Plex Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:
+    radial-gradient(circle at 15% 0%, rgba(75,238,209,.06), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(89,166,255,.06), transparent 40%),
+    var(--bg);
+  color:var(--fg);font-family:var(--body);margin:0;line-height:1.55;-webkit-font-smoothing:antialiased;
+  position:relative;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+  background-image:
+    linear-gradient(var(--bg-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+  background-size:42px 42px;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+}
+body::after{
+  content:"";position:fixed;left:0;right:0;height:2px;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity:.5; top:0; animation:scan 7s linear infinite;
+}
+@media (prefers-reduced-motion:reduce){ body::after{ animation:none; opacity:0; } }
+@keyframes scan{0%{top:0%}100%{top:100%}}
+img{max-width:100%}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0 0 .4em}
+a{color:var(--accent)}
+.mono{font-family:var(--mono)}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:20px;position:relative;z-index:2}
+.section{padding-block:56px}
+@media (max-width:640px){.section{padding-block:40px}}
+.glow{text-shadow:0 0 18px rgba(75,238,209,.35)}
+
+/* nav */
+header.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb, var(--bg) 82%, transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1040px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.9rem;color:var(--fg)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent),0 0 0 3px var(--accent-dim)}
+nav.links{display:flex;gap:22px;font-family:var(--mono);font-size:.8rem}
+nav.links a{color:var(--muted);text-decoration:none}
+nav.links a:hover{color:var(--accent)}
+@media (max-width:560px){nav.links{gap:12px}nav.links a{font-size:.72rem}}
+
+/* hero */
+.hero{padding-block:64px 40px}
+@media (max-width:640px){.hero{padding-block:40px 24px}}
+.eyebrow{font-family:var(--mono);color:var(--accent);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.eyebrow .dot{width:6px;height:6px}
+h1.name{font-size:clamp(2.2rem,5.4vw,3.6rem);font-weight:700}
+.tagline{color:var(--muted);font-size:clamp(1rem,2vw,1.2rem);max-width:54ch;margin-top:4px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+.btn{font-family:var(--mono);font-size:.85rem;padding:10px 16px;border-radius:8px;border:1px solid var(--line);color:var(--fg);text-decoration:none;background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);color:#04110e;border-color:var(--accent);font-weight:700;box-shadow:0 0 24px rgba(75,238,209,.25)}
+.btn:hover{border-color:var(--accent)}
+
+/* terminal */
+.term{margin-top:36px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.term-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.term-head span{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.term-title{margin-left:8px;font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+.term-body{padding:16px 18px;font-family:var(--mono);font-size:.86rem;color:var(--muted);min-width:0;overflow-x:auto;min-height:172px}
+.term-body .line{white-space:pre;margin-bottom:6px;opacity:0}
+.term-body .line.show{opacity:1}
+.term-body .k{color:var(--accent)}
+.term-body .v{color:var(--fg)}
+.cursor{display:inline-block;width:7px;height:1em;background:var(--accent);vertical-align:text-bottom;animation:blink 1.1s steps(1) infinite;box-shadow:0 0 8px var(--accent)}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}.term-body .line{opacity:1}}
+@keyframes blink{50%{opacity:0}}
+
+/* section heads */
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:26px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.head h2{font-size:clamp(1.3rem,2.6vw,1.7rem)}
+.head .idx{font-family:var(--mono);color:var(--muted);font-size:.8rem}
+
+/* about */
+.about-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:36px}
+@media (max-width:720px){.about-grid{grid-template-columns:1fr}}
+.about p{color:var(--muted)}
+.about p strong{color:var(--fg)}
+.facts{display:flex;flex-direction:column;gap:14px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.fact .label{font-family:var(--mono);font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.fact .val{margin-top:4px;font-size:.95rem}
+
+/* skills as diagnostics readout */
+.skill-panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px}
+.skill-cat{margin-bottom:22px}
+.skill-cat:last-child{margin-bottom:0}
+.skill-cat-head{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.78rem;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.skill-cat-head .ico{width:14px;height:14px;flex:none;color:var(--accent)}
+.skill-tags{display:flex;flex-wrap:wrap;gap:8px}
+.skill-tag{font-family:var(--mono);font-size:.78rem;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:6px 11px;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.skill-tag:hover{border-color:var(--accent);color:var(--accent)}
+.skill-tag .proof{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex:none}
+.skill-note{color:var(--muted);font-size:.8rem;margin:-10px 0 20px;max-width:70ch}
+
+/* project / case file */
+.project{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;display:grid;grid-template-columns:1fr;gap:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.project-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.severity{font-family:var(--mono);font-size:.72rem;padding:4px 10px;border-radius:99px;border:1px solid var(--crit);color:var(--crit);text-transform:uppercase;letter-spacing:.05em}
+.project h3{font-size:1.3rem}
+.project .desc{color:var(--muted);max-width:70ch}
+.attck{display:flex;flex-wrap:wrap;gap:8px}
+.attck span{font-family:var(--mono);font-size:.72rem;background:var(--surface-2);border:1px solid var(--line);color:var(--accent);padding:4px 9px;border-radius:6px}
+.diagram{overflow-x:auto}
+.diagram svg{display:block;min-width:560px;width:100%;height:auto}
+.diagram text{font-family:var(--mono);font-size:11px;fill:var(--muted)}
+.diagram .node-label{fill:var(--fg);font-size:12px}
+.diagram .node{fill:var(--surface-2);stroke:var(--line)}
+.diagram .node.hit{stroke:var(--crit);filter:drop-shadow(0 0 6px rgba(255,93,117,.5))}
+.diagram .flow{stroke:var(--line);stroke-width:1.5;fill:none}
+.diagram .flow.active{stroke:var(--accent);filter:drop-shadow(0 0 4px rgba(75,238,209,.6))}
+.findings{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.finding{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.finding .k{font-family:var(--mono);font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.finding .v{margin-top:4px;font-size:.9rem}
+
+.evidence{margin-top:4px;border:1px dashed var(--line);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;color:var(--muted);font-family:var(--mono);font-size:.8rem}
+.evidence .ico{color:var(--accent);flex:none}
+
+/* other labs grid */
+.lab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.lab-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.lab-card h3{font-size:1rem}
+.lab-card p{color:var(--muted);font-size:.86rem;margin:0}
+.lab-tags{display:flex;flex-wrap:wrap;gap:6px}
+.lab-tags span{font-family:var(--mono);font-size:.68rem;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);padding:3px 8px;border-radius:5px}
+.lab-card .lab-link{margin-top:auto;font-family:var(--mono);font-size:.78rem;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.lab-card .lab-link:hover{text-decoration:underline}
+.labs-note{color:var(--muted);font-size:.86rem;margin:-10px 0 22px;max-width:70ch}
+
+/* system log (experience, non-resume styling) */
+.syslog{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.syslog-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--surface-2);font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+.syslog-body{padding:6px 0}
+.log-entry{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.log-entry:last-child{border-bottom:none}
+@media (max-width:620px){.log-entry{grid-template-columns:1fr;gap:4px}}
+.log-when{font-family:var(--mono);font-size:.78rem;color:var(--accent)}
+.log-body h3{font-size:1.02rem;margin-bottom:2px}
+.log-body .org{color:var(--muted);font-size:.86rem;margin-bottom:6px;font-family:var(--mono)}
+.log-body p{color:var(--muted);font-size:.9rem;max-width:70ch}
+
+/* certs badges */
+.cert-row{display:flex;flex-wrap:wrap;gap:12px}
+.cert{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:.88rem;text-decoration:none;color:var(--fg)}
+a.cert:hover{border-color:var(--accent)}
+.cert .verify{font-family:var(--mono);font-size:.64rem;color:var(--accent);margin-left:2px}
+.cert .badge-ico{color:var(--accent)}
+.cert .stat{font-family:var(--mono);font-size:.66rem;padding:3px 8px;border-radius:99px;background:var(--accent-dim);color:var(--accent)}
+.cert .stat.progress{background:rgba(242,179,90,.15);color:var(--warn)}
+
+/* contact */
+.contact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:32px;display:flex;flex-wrap:wrap;gap:28px;justify-content:space-between;align-items:flex-start;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.contact h2{font-size:1.4rem}
+.contact p{color:var(--muted);max-width:48ch}
+.copy-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.9rem;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.copy-btn{font-family:var(--mono);font-size:.72rem;background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 8px;cursor:pointer}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+.contact-links{display:flex;flex-direction:column;gap:10px}
+.contact-links .btn{justify-content:flex-start}
+.contact-links svg{width:16px;height:16px;flex:none}
+
+footer{border-top:1px solid var(--line);padding:24px 20px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:.76rem;position:relative;z-index:2}
+
+/* mobile readability pass */
+@media (max-width:560px){
+  .wrap{padding-inline:16px}
+  nav.links{overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:60vw}
+  nav.links::-webkit-scrollbar{display:none}
+  .skill-panel{padding:16px}
+  .project{padding:18px}
+  .contact{padding:20px}
+  .cert{width:100%}
+  .cert-row{gap:8px}
+  .term-body{font-size:.78rem}
+  .eyebrow{font-size:.72rem}
+  .tagline{font-size:1rem}
+  footer{padding-bottom:64px}
+}
+</style>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand" style="text-decoration:none"><span class="dot"></span>lakshan_nirodha // portfolio</a>
+    <nav class="links">
+      <a href="#about">about</a>
+      <a href="#skills">skills</a>
+      <a href="#project">case file</a>
+      <a href="#labs">labs</a>
+      <a href="#log">log</a>
+      <a href="#certs">certs</a>
+      <a href="#contact">contact</a>
+      <a href="#" id="navCvBtn" style="color:var(--accent)">resume ↓</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero wrap" id="top">
+  <div class="eyebrow"><span class="dot"></span>Open to IT Support &amp; SOC roles - Melbourne, AU</div>
+  <h1 class="name glow">Lakshan Nirodha</h1>
+  <p class="tagline">Cyber security graduate. Blue team focus - detection, identity, and incident write-ups. Building depth one lab and one CTF room at a time.</p>
+  <div class="hero-cta">
+    <a class="btn primary" href="https://www.linkedin.com/in/lakshan-nirodha" target="_blank" rel="noopener">View LinkedIn</a>
+    <a class="btn" href="https://github.com/LakshanNirodha" target="_blank" rel="noopener">View GitHub</a>
+    <a class="btn primary" href="#" id="heroCvBtn">Download Resume ↓</a>
+    <a class="btn" href="#contact">Get in touch</a>
+  </div>
+
+  <div class="term">
+    <div class="term-head"><span></span><span></span><span></span><div class="term-title">whoami.log</div></div>
+    <div class="term-body" id="termBody">
+      <div class="line"><span class="k">analyst@soc:~$</span> <span class="v">whoami --profile</span></div>
+      <div class="line">name        : <span class="v">Lakshan Nirodha</span></div>
+      <div class="line">base        : <span class="v">Melbourne, Australia</span></div>
+      <div class="line">focus       : <span class="v">SIEM detection · identity &amp; access · incident response</span></div>
+      <div class="line">lab         : <span class="v">Microsoft Sentinel SOC lab (Azure)</span></div>
+      <div class="line">membership  : <span class="v">ACS Associate · AISA Associate</span></div>
+      <div class="line">status      : <span class="v">learning in public, open to work</span><span class="cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="about">
+  <div class="head"><h2>About</h2><span class="idx mono">// 01</span></div>
+  <div class="about-grid">
+    <div class="about">
+      <p><strong>I moved into cyber security from IT support</strong> because I like the part of the job where something looks fine until you check the logs and it isn't. My background is hands-on - telecommunications fieldwork, IT support for a small clinic, and now an internal IT internship where I'm proposing small security improvements as I learn.</p>
+      <p>Outside of work I run a self-built SOC lab in Azure using Microsoft Sentinel, work through hands-on rooms on TryHackMe, and study frameworks like the Essential Eight and NIST CSF. I'm an associate member of the ACS and AISA, and I volunteer at cyber security community events around Melbourne, including CyberCon.</p>
+      <p>I'm early in this field. What I can show is real: a working detection lab, a documented investigation, and consistent study - not a longer list of buzzwords.</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="label">Focus</div><div class="val">SOC / Blue Team, IT Support</div></div>
+      <div class="fact"><div class="label">Current role</div><div class="val">IT Support Intern, Prima PMI</div></div>
+      <div class="fact"><div class="label">Studying</div><div class="val">CompTIA Security+</div></div>
+      <div class="fact"><div class="label">Location</div><div class="val">Melbourne, VIC - open to relocate</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="skills">
+  <div class="head"><h2>Skills</h2><span class="idx mono">// 02</span></div>
+  <p class="skill-note">A skill is listed here because I used it to build a documented lab below - not a self-rated percentage. Click any tag to jump to the proof.</p>
+  <div class="skill-panel">
+    <div class="skill-cat">
+      <div class="skill-cat-head">▸ Detection &amp; SIEM - proven in lab</div>
+      <div class="skill-tags">
+        <a class="skill-tag" href="#project"><span class="proof"></span>Microsoft Sentinel</a>
+        <a class="skill-tag" href="#project"><span class="proof"></span>KQL (detection queries)</a>
+        <a class="skill-tag" href="#project"><span class="proof"></span>Alert triage &amp; investigation</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Wazuh SIEM</a>
+        <a class="skill-tag" href="#project"><span class="proof"></span>Incident documentation</a>
+      </div>
+    </div>
+    <div class="skill-cat">
+      <div class="skill-cat-head">▸ Identity, Network &amp; Systems - proven in lab</div>
+      <div class="skill-tags">
+        <a class="skill-tag" href="#project"><span class="proof"></span>Entra ID / Azure AD</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>pfSense firewall</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Networking (TCP/IP, DNS)</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Wireshark</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Linux CLI (Ubuntu)</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Metasploit / Nmap</a>
+        <a class="skill-tag" href="#labs"><span class="proof"></span>Docker</a>
+      </div>
+    </div>
+    <div class="skill-cat">
+      <div class="skill-cat-head">▸ Currently studying - not yet lab-proven</div>
+      <div class="skill-tags">
+        <span class="skill-tag" style="opacity:.75">Essential Eight</span>
+        <span class="skill-tag" style="opacity:.75">NIST CSF</span>
+        <span class="skill-tag" style="opacity:.75">Python &amp; SQL</span>
+        <span class="skill-tag" style="opacity:.75">CompTIA Security+</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="project">
+  <div class="head"><h2>Case file</h2><span class="idx mono">// 03</span></div>
+  <div class="project">
+    <div class="project-top">
+      <h3>Microsoft Sentinel SOC Lab</h3>
+      <span class="severity">Detected · Password Spray</span>
+    </div>
+    <p class="desc">Built a small Security Operations Centre lab on Azure to learn detection engineering hands-on instead of from theory alone. Deployed a Log Analytics workspace, connected it to Microsoft Sentinel, ingested sign-in logs, and wrote an analytic rule to flag unusual authentication patterns. The lab surfaced a simulated password spray attack - repeated low-and-slow sign-in attempts across many accounts from one source - which I investigated and documented like a real incident.</p>
+
+    <div class="attck">
+      <span>MITRE ATT&amp;CK · T1110.003 Password Spraying</span>
+      <span>Tactic · Credential Access</span>
+      <span>Data source · Azure AD Sign-in Logs</span>
+    </div>
+
+    <div class="diagram">
+      <svg viewBox="0 0 1080 170" role="img" aria-label="Diagram: sign-in logs flow from Azure AD into Microsoft Sentinel, an analytic rule fires an alert, the analyst investigates, then writes up a documented incident report.">
+        <g>
+          <rect class="node" x="20" y="60" width="150" height="54" rx="8"/>
+          <text class="node-label" x="95" y="83" text-anchor="middle">Sign-in Logs</text>
+          <text x="95" y="100" text-anchor="middle">Azure AD</text>
+
+          <path class="flow active" d="M170,87 L300,87" marker-end="url(#arrow)"/>
+
+          <rect class="node hit" x="300" y="50" width="170" height="74" rx="8"/>
+          <text class="node-label" x="385" y="78" text-anchor="middle">Microsoft Sentinel</text>
+          <text x="385" y="94" text-anchor="middle">Analytic rule (KQL)</text>
+          <text x="385" y="109" text-anchor="middle" fill="var(--crit)">⚠ alert fired</text>
+
+          <path class="flow active" d="M470,87 L600,87" marker-end="url(#arrow)"/>
+
+          <rect class="node" x="600" y="60" width="150" height="54" rx="8"/>
+          <text class="node-label" x="675" y="83" text-anchor="middle">Alert Triage</text>
+          <text x="675" y="100" text-anchor="middle">Investigation</text>
+
+          <path class="flow active" d="M750,87 L880,87" marker-end="url(#arrow)"/>
+
+          <rect class="node" x="880" y="60" width="170" height="54" rx="8"/>
+          <text class="node-label" x="965" y="83" text-anchor="middle">Incident Report</text>
+          <text x="965" y="100" text-anchor="middle">Write-up + playbook</text>
+        </g>
+        <text x="20" y="140" fill="var(--muted)">Identity signal</text>
+        <text x="300" y="140" fill="var(--muted)">Detection engine</text>
+        <text x="600" y="140" fill="var(--muted)">Analyst response</text>
+        <text x="880" y="140" fill="var(--muted)">Documented output</text>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 z" fill="var(--accent)"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="findings">
+      <div class="finding"><div class="k">Environment</div><div class="v">Azure Log Analytics + Sentinel</div></div>
+      <div class="finding"><div class="k">Detection</div><div class="v">Custom KQL analytic rule</div></div>
+      <div class="finding"><div class="k">Finding</div><div class="v">279 HIGH alerts · 57 accounts · 3 countries</div></div>
+      <div class="finding"><div class="k">Output</div><div class="v">Full write-up, KQL &amp; playbook on GitHub</div></div>
+    </div>
+
+    <a class="btn" href="https://github.com/LakshanNirodha/Microsoft-Sentinel-SOC-Lab" target="_blank" rel="noopener">View full investigation on GitHub ↗</a>
+  </div>
+</section>
+
+<section class="section wrap" id="labs">
+  <div class="head"><h2>Other labs</h2><span class="idx mono">// 04</span></div>
+  <p class="labs-note">Each one is fully documented on GitHub - setup steps, config, and screenshots included. This is just the summary.</p>
+  <div class="lab-grid">
+    <div class="lab-card">
+      <h3>Wazuh SIEM SOC Lab</h3>
+      <p>Deployed a Wazuh SIEM, configured File Integrity Monitoring, and monitored endpoint alerts.</p>
+      <div class="lab-tags"><span>Wazuh</span><span>Ubuntu</span><span>PowerShell</span></div>
+      <a class="lab-link" href="https://github.com/LakshanNirodha/Wazuh-SIEM-SOC-Lab" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+    <div class="lab-card">
+      <h3>pfSense DoS Mitigation</h3>
+      <p>Simulated and mitigated a TCP SYN flood attack using pfSense firewall rules.</p>
+      <div class="lab-tags"><span>pfSense</span><span>Wireshark</span><span>hping3</span></div>
+      <a class="lab-link" href="https://github.com/LakshanNirodha/pfSense-DoS-Mitigation" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+    <div class="lab-card">
+      <h3>SafeLine WAF Deployment</h3>
+      <p>Deployed SafeLine WAF as a reverse proxy in front of a vulnerable app and blocked simulated SQL injection.</p>
+      <div class="lab-tags"><span>SafeLine</span><span>Docker</span><span>OpenSSL</span></div>
+      <a class="lab-link" href="https://github.com/LakshanNirodha/SafeLine-WAF-Deployment" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+    <div class="lab-card">
+      <h3>System Exploitation &amp; Hardening</h3>
+      <p>Exploited MS08-067 on Windows XP with Metasploit, then applied 8 core hardening measures.</p>
+      <div class="lab-tags"><span>Metasploit</span><span>Kali</span><span>Nmap</span></div>
+      <a class="lab-link" href="https://github.com/LakshanNirodha/System-Exploitation-and-Hardening" target="_blank" rel="noopener">View on GitHub ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="log">
+  <div class="head"><h2>System log</h2><span class="idx mono">// 05</span></div>
+  <div class="syslog">
+    <div class="syslog-head">tail -f career.log</div>
+    <div class="syslog-body">
+      <div class="log-entry">
+        <div class="log-when">2026 - present</div>
+        <div class="log-body">
+          <h3>IT Support Intern</h3>
+          <div class="org">Prima PMI · Melbourne</div>
+          <p>Day-to-day IT support while learning the environment, with the goal of proposing small cyber security improvements as I go.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="log-when">May – Jun 2026</div>
+        <div class="log-body">
+          <h3>IT Support Consultant (Contract)</h3>
+          <div class="org">Define Dermatology · Glen Waverley</div>
+          <p>IT support for a small clinic - troubleshooting, device setup, and day-to-day technical issues for staff.</p>
+        </div>
+      </div>
+      <div class="log-entry">
+        <div class="log-when">Mar 2024 – Jun 2026</div>
+        <div class="log-body">
+          <h3>Telecommunications Groundworker</h3>
+          <div class="org">SNS Tech</div>
+          <p>Field work on telecommunications infrastructure - a practical habit of following process carefully and documenting what was done, which now carries into how I write up lab investigations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="certs">
+  <div class="head"><h2>Certifications &amp; education</h2><span class="idx mono">// 06</span></div>
+
+  <div class="skill-cat">
+    <div class="skill-cat-head">▸ Education</div>
+    <div class="cert-row">
+      <div class="cert"><span class="badge-ico">◆</span>Bachelor of IT - Cyber Security Ops &amp; Network Security <span class="stat">Melbourne Polytechnic, 2026</span></div>
+      <div class="cert"><span class="badge-ico">◆</span>Diploma of IT <span class="stat">Swinburne University, 2023</span></div>
+    </div>
+  </div>
+
+  <div class="skill-cat">
+    <div class="skill-cat-head">▸ Certifications - verified</div>
+    <div class="cert-row">
+      <a class="cert" href="https://www.coursera.org/account/accomplishments/specialization/UGVZY2X52MJ2" target="_blank" rel="noopener"><span class="badge-ico">◆</span>Google Cybersecurity Professional Certificate <span class="stat">completed</span><span class="verify">verify ↗</span></a>
+      <a class="cert" href="https://learn.microsoft.com/api/credentials/share/en-gb/LakshanNirodhaS1571795-9453/63F6A3F3C168339B?sharingId" target="_blank" rel="noopener"><span class="badge-ico">◆</span>Microsoft Applied Skills - Azure Networking <span class="stat">completed</span><span class="verify">verify ↗</span></a>
+      <a class="cert" href="https://www.credly.com/badges/97e87997-4677-49ea-bb6a-126f9272e194" target="_blank" rel="noopener"><span class="badge-ico">◆</span>Microsoft AI Skills Fest 2026 <span class="stat">completed</span><span class="verify">verify ↗</span></a>
+      <a class="cert" href="https://app.letsdefend.io/my-rewards/detail/8848db11-5bd7-462e-b30a-6d6c0940e8e3" target="_blank" rel="noopener"><span class="badge-ico">◆</span>LetsDefend - SOC Member <span class="stat">completed</span><span class="verify">verify ↗</span></a>
+      <a class="cert" href="https://online.melbournepolytechnic.edu.au/badges/badge.php?hash=f321f1c9b39e0ea5f8d2c8b376c26fedab1235fd" target="_blank" rel="noopener"><span class="badge-ico">◆</span>Cyber &amp; Privacy Aware <span class="stat">completed</span><span class="verify">verify ↗</span></a>
+      <a class="cert" href="https://www.theforage.com/completion-certificates/mfxGwGDp6WkQmtmTf/vcKAB5yYAgvemepGQ_mfxGwGDp6WkQmtmTf_69ef057efae4faaa27679a33_1778392884408_completion_certificate.pdf" target="_blank" rel="noopener"><span class="badge-ico">◆</span>Mastercard Cybersecurity Job Simulation <span class="stat">Forage</span><span class="verify">verify ↗</span></a>
+      <div class="cert"><span class="badge-ico">◆</span>Microsoft Skills Bootcamp - Azure Fundamentals <span class="stat">completed</span></div>
+    </div>
+  </div>
+
+  <div class="skill-cat">
+    <div class="skill-cat-head">▸ Memberships</div>
+    <div class="cert-row">
+      <div class="cert"><span class="badge-ico">◆</span>ACS Associate Member <span class="stat">2026-2027</span></div>
+      <div class="cert"><span class="badge-ico">◆</span>AISA Associate Member <span class="stat">2026-2028</span></div>
+      <div class="cert"><span class="badge-ico">◆</span>ISC2 Candidate <span class="stat progress">member</span></div>
+    </div>
+  </div>
+
+  <div class="skill-cat">
+    <div class="skill-cat-head">▸ In progress</div>
+    <div class="cert-row">
+      <div class="cert"><span class="badge-ico">◆</span>CompTIA Security+ <span class="stat progress">studying</span></div>
+      <div class="cert"><span class="badge-ico">◆</span>TryHackMe - Top 25% · 23 rooms completed <span class="stat progress">active</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="contact">
+  <div class="contact">
+    <div>
+      <h2>Let's talk</h2>
+      <p>Open to IT support and cyber security / SOC roles in Melbourne, or remote-friendly internships across Australia. Happy to share my full CV and lab write-up on request.</p>
+    </div>
+    <div class="contact-links">
+      <div class="copy-row" id="emailRow">
+        <span>lakshannirodha@gmail.com</span>
+        <button class="copy-btn" id="copyEmailBtn" type="button">Copy</button>
+      </div>
+      <a class="btn" href="https://www.linkedin.com/in/lakshan-nirodha" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7.3" cy="8.2" r="1.3"/><rect x="6.1" y="10.3" width="2.4" height="8" /><path d="M11.3 10.3h2.3v1.2c.5-.8 1.5-1.4 2.9-1.4 2.2 0 3.3 1.4 3.3 4v4.2h-2.4v-3.8c0-1.3-.5-2.1-1.6-2.1-1 0-1.6.7-1.9 1.4-.1.3-.1.6-.1 1v3.5h-2.4z"/></svg>
+        LinkedIn ↗
+      </a>
+      <a class="btn" href="https://github.com/LakshanNirodha" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.26.1-2.63 0 0 .84-.27 2.75 1.03a9.5 9.5 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.37.2 2.38.1 2.63.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85v2.74c0 .26.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+        GitHub ↗
+      </a>
+      <a class="btn" href="https://tryhackme.com/p/LakshanNirodha" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 3v18"/><path d="M5 4h12l-2.5 3.5L17 11H5"/></svg>
+        TryHackMe ↗
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>root@lakshan-portfolio:~$ connection secure · Melbourne, Australia</footer>
+
+<script>
+(function(){
+  try{
+    var btn = document.getElementById('copyEmailBtn');
+    var email = 'lakshannirodha@gmail.com';
+    btn.addEventListener('click', function(){
+      function done(ok){
+        btn.textContent = ok ? 'Copied' : 'Select text';
+        setTimeout(function(){ btn.textContent = 'Copy'; }, 1600);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(email).then(function(){done(true)}).catch(function(){done(false)});
+      } else {
+        done(false);
+      }
+    });
+  }catch(e){}
+
+  try{
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var lines = document.querySelectorAll('#termBody .line');
+    if(reduce){
+      lines.forEach(function(l){ l.classList.add('show'); });
+    } else {
+      lines.forEach(function(l, i){
+        setTimeout(function(){ l.classList.add('show'); }, i * 260);
+      });
+    }
+  }catch(e){}
+
+  async function downloadCV(e){
+    if(e) e.preventDefault();
+    try{
+      var downloads = await claude.use('downloads');
+      var res = await fetch('assets/Lakshan_Nirodha_CV.pdf');
+      var blob = await res.blob();
+      if(!downloads){
+        window.open('assets/Lakshan_Nirodha_CV.pdf', '_blank');
+        return;
+      }
+      await downloads.save({ filename: 'Lakshan_Nirodha_CV.pdf', data: blob });
+    }catch(err){
+      window.open('assets/Lakshan_Nirodha_CV.pdf', '_blank');
+    }
+  }
+  try{
+    var b1 = document.getElementById('heroCvBtn');
+    var b2 = document.getElementById('navCvBtn');
+    if(b1) b1.addEventListener('click', downloadCV);
+    if(b2) b2.addEventListener('click', downloadCV);
+  }catch(e){}
+})();
+</script>
